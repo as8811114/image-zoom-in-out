@@ -15,7 +15,10 @@ class App extends Component {
     img.onload = () => {
       if (type === "init") {
         this.setState({
-          scale: img.height >= img.width ? 480 / img.height : 640 / img.width,
+          scale:
+            img.height >= img.width
+              ? Canvas.height / img.height
+              : Canvas.width / img.width,
         });
       } else if (type === "zoomIn")
         this.setState({ scale: this.state.scale * 1.1 });
@@ -51,7 +54,11 @@ class App extends Component {
           id={"canvas"}
           width={640}
           height={480}
-          style={{ border: "1px black solid" }}
+          style={{
+            border: "1px black solid",
+            width: "70vw",
+            maxWidth: "640px",
+          }}
         ></canvas>
         {!this.state.hasFile && (
           <input
