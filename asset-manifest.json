@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/image-zoom-in-out/static/js/main.33d7db76.js",
+    "main.js": "/image-zoom-in-out/static/js/main.90d552b3.js",
     "index.html": "/image-zoom-in-out/index.html",
-    "main.33d7db76.js.map": "/image-zoom-in-out/static/js/main.33d7db76.js.map"
+    "main.90d552b3.js.map": "/image-zoom-in-out/static/js/main.90d552b3.js.map"
   },
   "entrypoints": [
-    "static/js/main.33d7db76.js"
+    "static/js/main.90d552b3.js"
   ]
 }
