@@ -4,15 +4,15 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
-      originPoint: { x: 0, y: 0 },
-      oldOrignPoint: { x: 0, y: 0 },
-      oldPoint: { x: 0, y: 0 },
-      offSet: { x: 0, y: 0 },
       hasFile: false,
-      imgSrc: "",
-      isDragging: false,
     };
+    this.originPoint = { x: 0, y: 0 }; // originPoint of the image that inside the canvas
+    this.oldOrignPoint = { x: 0, y: 0 }; // originPoint before drag finish to calcu new originPoint after drag
+    this.oldPoint = { x: 0, y: 0 }; // the coordinate of mouse down
+    this.offSet = { x: 0, y: 0 }; // drag offset coordinate
     this.scale = 0;
+    this.isDragging = false;
+    this.imgSrc = "";
   }
   drawImageInCanvas(type, imgUrl) {
     const Canvas = document.getElementById("canvas");
@@ -22,6 +22,7 @@ class App extends Component {
 
     //wait for image loading
     img.onload = () => {
+      //adjust img scale to set the init scale as 1
       if (type === "init") {
         this.scale =
           img.height >= img.width
@@ -34,36 +35,35 @@ class App extends Component {
       const h = img.height * this.scale;
       const w = img.width * this.scale;
       if (type !== "drag") {
-        this.setState({
-          originPoint: {
-            x: Canvas.width / 2 - w / 2,
-            y: Canvas.height / 2 - h / 2,
-          },
-          oldOrignPoint: {
-            x: Canvas.width / 2 - w / 2,
-            y: Canvas.height / 2 - h / 2,
-          },
-        });
+        //set the position of img at the center of canvas
+        //oldOriginPoint is for drag to calculate the offset of the originPoint
+        this.originPoint = {
+          x: Canvas.width / 2 - w / 2,
+          y: Canvas.height / 2 - h / 2,
+        };
+        this.oldOrignPoint = {
+          x: Canvas.width / 2 - w / 2,
+          y: Canvas.height / 2 - h / 2,
+        };
       }
       //if image's bound is outside of canvas's bound then user can drag the image
       else if (
         type === "drag" &&
-        (this.state.originPoint.x < 0 ||
-          this.state.originPoint.y < 0 ||
-          this.state.originPoint.x + w > Canvas.width ||
-          w > this.state.originPoint.y + Canvas.width)
+        (this.originPoint.x < 0 ||
+          this.originPoint.y < 0 ||
+          this.originPoint.x + w > Canvas.width ||
+          w > this.originPoint.y + Canvas.width)
       ) {
-        this.setState({
-          originPoint: {
-            x: this.state.oldOrignPoint.x + this.state.offSet.x,
-            y: this.state.oldOrignPoint.y + this.state.offSet.y,
-          },
-        });
+        //calculate the offset of the new originPoint
+        this.originPoint = {
+          x: this.oldOrignPoint.x + this.offSet.x,
+          y: this.oldOrignPoint.y + this.offSet.y,
+        };
       }
 
       //set image origin coordinate
-      const originX = this.state.originPoint.x;
-      const originY = this.state.originPoint.y;
+      const originX = this.originPoint.x;
+      const originY = this.originPoint.y;
       //clean last image
       canvasContext2D.clearRect(0, 0, Canvas.width, Canvas.height);
 
@@ -91,29 +91,26 @@ class App extends Component {
             maxWidth: "640px",
           }}
           onMouseDown={(e) => {
-            this.setState({
-              oldPoint: { x: e.clientX, y: e.clientY },
-              isDragging: true,
-            });
+            this.oldPoint = { x: e.clientX, y: e.clientY };
+            this.isDragging = true;
           }}
           onMouseMove={(e) => {
-            if (this.state.isDragging) {
+            if (this.isDragging) {
               const currentPoint = { x: e.clientX, y: e.clientY };
-              const offSetX = currentPoint.x - this.state.oldPoint.x;
-              const offSetY = currentPoint.y - this.state.oldPoint.y;
-              this.setState({ offSet: { x: offSetX, y: offSetY } });
-              this.drawImageInCanvas("drag", this.state.imgSrc);
+              const offSetX = currentPoint.x - this.oldPoint.x;
+              const offSetY = currentPoint.y - this.oldPoint.y;
+              this.offSet = { x: offSetX, y: offSetY };
+
+              this.drawImageInCanvas("drag", this.imgSrc);
             }
           }}
           onMouseUp={(e) => {
-            this.setState({
-              isDragging: false,
-              offSet: { x: 0, y: 0 },
-              oldOrignPoint: {
-                x: this.state.originPoint.x,
-                y: this.state.originPoint.y,
-              },
-            });
+            this.offSet = { x: 0, y: 0 };
+            this.isDragging = false;
+            this.oldOrignPoint = {
+              x: this.originPoint.x,
+              y: this.originPoint.y,
+            };
           }}
         ></canvas>
         {!this.state.hasFile && (
@@ -121,9 +118,10 @@ class App extends Component {
             type="file"
             onChange={(e) => {
               const img = e.target.files[0];
-              const imgSrc = window.URL.createObjectURL(img);
-              this.setState({ hasFile: true, imgSrc: imgSrc });
-              this.drawImageInCanvas("init", imgSrc);
+              const imgUrl = window.URL.createObjectURL(img);
+              this.imgSrc = imgUrl;
+              this.setState({ hasFile: true });
+              this.drawImageInCanvas("init", this.imgSrc);
             }}
           />
         )}
@@ -131,14 +129,14 @@ class App extends Component {
           <div>
             <button
               onClick={() => {
-                this.drawImageInCanvas("zoomIn", this.state.imgSrc);
+                this.drawImageInCanvas("zoomIn", this.imgSrc);
               }}
             >
               Zoom In
             </button>
             <button
               onClick={() => {
-                this.drawImageInCanvas("zoomOut", this.state.imgSrc);
+                this.drawImageInCanvas("zoomOut", this.imgSrc);
               }}
             >
               Zoom Out
