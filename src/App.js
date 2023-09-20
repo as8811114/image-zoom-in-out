@@ -10,9 +10,9 @@ class App extends Component {
       offSet: { x: 0, y: 0 },
       hasFile: false,
       imgSrc: "",
-      scale: 0,
       isDragging: false,
     };
+    this.scale = 0;
   }
   drawImageInCanvas(type, imgUrl) {
     const Canvas = document.getElementById("canvas");
@@ -23,21 +23,17 @@ class App extends Component {
     //wait for image loading
     img.onload = () => {
       if (type === "init") {
-        this.setState({
-          scale:
-            img.height >= img.width
-              ? Canvas.height / img.height
-              : Canvas.width / img.width,
-        });
-      } else if (type === "zoomIn")
-        this.setState({ scale: this.state.scale * 1.1 });
-      else if (type === "zoomOut")
-        this.setState({ scale: this.state.scale * 0.9 });
+        this.scale =
+          img.height >= img.width
+            ? Canvas.height / img.height
+            : Canvas.width / img.width;
+      } else if (type === "zoomIn") this.scale = this.scale + 0.1;
+      else if (type === "zoomOut") this.scale = this.scale - 0.1;
 
       //set image height and width
-      const h = img.height * this.state.scale;
-      const w = img.width * this.state.scale;
-      if (type === "init") {
+      const h = img.height * this.scale;
+      const w = img.width * this.scale;
+      if (type !== "drag") {
         this.setState({
           originPoint: {
             x: Canvas.width / 2 - w / 2,
@@ -72,7 +68,7 @@ class App extends Component {
       canvasContext2D.clearRect(0, 0, Canvas.width, Canvas.height);
 
       //if image scale too small image won't be showed
-      if (this.state.scale > 0.05)
+      if (this.scale > 0.05)
         canvasContext2D.drawImage(img, originX, originY, w, h);
     };
   }
